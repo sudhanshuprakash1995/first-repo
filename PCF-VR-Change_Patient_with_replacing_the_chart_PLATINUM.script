@@ -1,0 +1,779 @@
+﻿(*************************************************
+Script Name: PCF-VR-Change_Patient_with_replacing_the_chart
+Author: SP094303
+Date of creation: 24/10/2022
+*****************************
+
+RQM: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=148366
+
+*************************************************)
+--------------------------------------------------------------------------------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////PARAMETERS/////////////////////////////////////////////////////////////////////
+
+Params Domain
+Set Testdata to "UTIL/JSON".initializeResourceData(JSONValue(file ResourcePath("PCF-VR-Change_Patient_with_replacing_the_chart_PLATINUM.json")),Domain)
+--------------------------------------------------------------------------------------------------------------------------------------------------
+Try
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Launch PowerChart with user1 specified in precondition.>>
+	
+	Common.LaunchMillenniumWindow Testdata.Application
+	Run "MIL/Millennium".login Testdata.User1,Testdata.Password,Domain
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	Run "DSK/Utilities".maximizeWindow	
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+2)
+	Log <<Step>>&&stepNum&<< Open prerequisite patient list and select/search Patient A and open the patient chart.>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.ShortWait, image:"PatientList/Lable_PatientList"
+	waitfor Testdata.ShortWait, text:Testdata.ListName, SearchRectangle:ImageRectangle("PatientList/Lable_PatientList")+[-5,0,100,100]
+	Click text:"Name",caseSensitive:true
+	CaptureScreen {Name: "Step 02"}
+
+	PatientList.DoubleClickPatientNameInPatientList Testdata.PatientA
+	if ImageFound(text:"Assign a Relationship")
+		click {text:"Attending Physician"}
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 03"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Information > Visit List sub tab.>>
+	
+	//waitfor Testdata.ShortWait, {image:"Common/Icon_Refresh",Searchrectangle:[]}
+	waitfor Testdata.ShortWait, text:"Patient Demographics", caseSensitive:yes
+	PPRSummary.ClickTab Testdata.VisitList
+	waitforall Testdata.ShortWait, "MIL/PowerChart/Label_Menu", "PCF/PowerChartApp/Icon_Recent"
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN1 with Error "FIN assertion failed"
+	
+	CaptureScreen {Name: "Step 04"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to Organizer > Patient List & Double Click on Patient B in custom patient list>>
+	
+	typetext altKey, tabKey
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	click text:Testdata.PatientD
+	PatientList.DoubleClickPatientNameInPatientList Testdata.PatientB
+	if ImageFound(text:"Assign a Relationship")
+		click (text:"Attending Physician")
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains "Visit List" with Error "FIN assertion failed"
+
+	CaptureScreen {Name: "Step 05"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Information > PPR Summary tab >>
+	
+	PPRSummary.ClickTab Testdata.PPRSummary
+	//correct this assertion for verification
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains"Lifetime Relationships" and ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains "Visit Relationships" with Error "FIN assertion failed"
+
+	CaptureScreen {Name: "Step 06"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Search icon and Search/load for Patient C chart.>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext returnKey
+	"MIL/PatientSearch".selectByFIN Testdata.FIN3
+	if ImageFound(text:"Assign a Relationship")
+		click {text:"Attending Physician"}
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 07"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Information > Visit List sub tab>>
+	
+	PPRSummary.ClickTab Testdata.VisitList	
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN3 with Error "FIN assertion failed"
+
+	CaptureScreen {Name: "Step 08"}
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to Organizer > Patient List view. #Right Click on Patient D in custom patient list and select #Open Chart option > Patient Information>>
+	
+	typetext altKey, tabKey
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	"PatientList".RightClickAndSelectAnyOptionInPatientList Testdata.PatientD, "Open Patient Chart,Patient Information"
+	if ImageFound(text:"Assign a Relationship")
+		click (text:"Attending Physician")
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN4 with Error "FIN assertion failed"
+	
+	CaptureScreen {Name: "Step 09"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Recent button and select Patient A Chart>>
+	
+	set the SearchRectangle to []
+	click image:"PCF/PowerChartApp/Icon_Recent"
+	waitfor Testdata.ShortWait, text:Testdata.PatientA
+	click text:Testdata.PatientA, SearchRectangle:imagerectangle("Millennium/PatientSearch/Icon_Search")+[-150,0,0,150]
+	waitforall Testdata.ShortWait, "MIL/PowerChart/Label_Menu", "PCF/PowerChartApp/Icon_Recent"
+	assert that readtext(ImageRectangle("MIL/PowerChart/Label_Menu")+[-10,-90,100,-80]) contains Testdata.PatientA with error "Provider Name"
+	assert that readtext(ImageRectangle("MIL/PowerChart/Label_Menu")+[-10,-90,100,-80])  does not contain Testdata.PatientD with error "Provider Name"
+	
+	CaptureScreen {Name: "Step 10"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Information > PPR Summary tab>>
+	
+	PPRSummary.ClickTab Testdata.PPRSummary
+	WaitFor Testdata.ShortWait, Text:"Lifetime Relationships" 
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains "Visit Relationships" with Error "PPRSummary assertion failed"
+	
+	CaptureScreen {Name: "Step 11"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Previous Patient Chart button>>
+	
+	click image:"PCF/PowerChartApp/Icon_Previous_Chart"
+	assert readtext(ImageRectangle("MIL/PowerChart/Label_Menu")+[-10,-90,100,-80]) contains Testdata.PatientC with error "Provider Name"
+	WaitFor Testdata.ShortWait, Text:"Lifetime Relationships" 
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains "Visit Relationships" with Error "PPRSummary assertion failed"
+
+	CaptureScreen {Name: "Step 12"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Next Patient Chart button>>
+	
+	click image:"PCF/PowerChartApp/Icon_Next_Chart"
+	waitfor Testdata.ShortWait, image:"MIL/PowerChart/Label_Menu"
+	assert readtext(ImageRectangle("MIL/PowerChart/Label_Menu")+[-10,-90,100,-80]) contains Testdata.PatientD with error "Provider Name"
+	WaitFor Testdata.ShortWait, Text:"Lifetime Relationships" 
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains "Visit Relationships" with Error "FIN assertion failed"
+	
+	CaptureScreen {Name: "Step 13"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Information > Visit List sub tab>>
+	
+	PPRSummary.ClickTab Testdata.VisitList	
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN4 with Error "FIN assertion failed"
+	
+	CaptureScreen {Name: "Step 14"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< # Navigate to Organizer > Patient List view. # Select Patient B in custom patient list # From Chart Menu, Select Patient Information option>>
+	
+	typetext altKey, tabKey
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	"PatientList".RightClickAndSelectAnyOptionInPatientList Testdata.PatientB, "Open Patient Chart,Patient Information"
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 15"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< 1) Navigate to Organizer > Patient List view. # Select Patient C in custom patient list # From Patient of Interest Menu option, Select Patient Information option>>
+	
+	typetext altKey, tabKey
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	"PatientList".RightClickAndSelectAnyOptionInPatientList Testdata.PatientC, "Open Patient Chart,Patient Information"
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN3 with Error "FIN assertion failed"
+	
+	CaptureScreen {Name: "Step 16"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Information > PPR Summary tab>>
+	
+	PPRSummary.ClickTab Testdata.PPRSummary
+	WaitFor Testdata.ShortWait, Text:"Lifetime Relationships" 
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains "Visit Relationships" with Error "PPRSummary assertion failed"
+	
+	CaptureScreen {Name: "Step 17"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< 1) Navigate to Organizer # Click on Patient Menu > Search option #Search/load Patient D chart>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext returnKey
+	"MIL/PatientSearch".selectByFIN Testdata.FIN4
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 18"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Patient chart and powerchart application>>
+	
+	click "Powerchart Organizer/Icon_Exit"
+	"common".ClosePowerChart
+	typetext returnKey
+	
+	CaptureScreen {Name: "Step 19"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Launch PowerChart application with the User 2 identified in the prerequisites.>>
+	
+	Common.LaunchMillenniumWindow Testdata.Application
+	Run "MIL/Millennium".login Testdata.User2,Testdata.Password,Domain
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	
+	CaptureScreen {Name: "Step 20"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Open prerequisite patient list>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.ShortWait, image:"PatientList/Lable_PatientList"
+	waitfor Testdata.ShortWait, text:Testdata.ListName, 	SearchRectangle:ImageRectangle("PatientList/Lable_PatientList")+[-5,0,100,100]
+	Click text:"Name",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 21"}
+
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select/Search Patient A and open the patient chart A>>
+	
+	PatientList.DoubleClickPatientNameInPatientList Testdata.PatientA
+	if ImageFound(text:"Assign a Relationship")
+		click text:"Attending Physician", SearchRectangle:ImageRectangle(text:"Assign a Relationship")+[-20,-10,180,250]
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 22"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Information > Visit List sub tab>>
+	
+	PPRSummary.ClickTab Testdata.VisitList	
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN1 with Error "FIN assertion failed"
+	
+	CaptureScreen {Name: "Step 23"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select/Search Patient B and open the patient chart B>>
+	
+	typetext altKey, tabKey
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	PatientList.DoubleClickPatientNameInPatientList Testdata.PatientB
+	if ImageFound(text:"Assign a Relationship")
+		click text:"Attending Physician", SearchRectangle:ImageRectangle(text:"Assign a Relationship")+[-20,-10,180,250]
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	Assert that readtext(ImageRectangle("MIL/PowerChart/Label_Menu")+[-10,-90,100,-80]) contains Testdata.PatientA and readtext(ImageRectangle("MIL/PowerChart/Label_Menu")+[100,-90,200,-80]) contains Testdata.PatientB with Error "Chart tab assertion failed"
+	
+	CaptureScreen {Name: "Step 24"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Information > Visit List sub tab>>
+	
+	PPRSummary.ClickTab Testdata.VisitList	
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN2 with Error "FIN assertion failed"
+	
+	CaptureScreen {Name: "Step 25"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< 1) Navigate to Organizer > Patient List > Double Click on Patient C to open patient chart>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	click text:Testdata.PatientD
+	PatientList.DoubleClickPatientNameInPatientList Testdata.PatientC
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 26"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient A chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientA
+	click text:"OK",caseSensitive:true
+	//Run "DSK/Utilities".maximizeWindow	
+	set the SearchRectangle to []
+	if ImageFound(text:"Assign a Relationship")
+		click (text:"Attending Physician")
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 27"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient B chart displayed next to Patient Chart C>>
+	
+	click text:Testdata.patientB,searchrectangle:ImageRectangle("MIL/PowerChart/Label_Menu")+[-10,-90,90,-80]
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN2 with Error "FIN assertion failed"
+
+	CaptureScreen {Name: "Step 28"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Search icon and Search/load for Patient D chart>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext returnKey
+	"MIL/PatientSearch".selectByFIN Testdata.FIN4
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 29"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient B chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientB
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	if ImageFound(text:"Assign a Relationship")
+		click text:"Attending Physician", SearchRectangle:ImageRectangle(text:"Assign a Relationship")+[-20,-10,180,250]
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 30"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< For both the Patient C and Patient D, Click on Patient Information > PPR Summary tab>>
+	
+	PPRSummary.ClickTab Testdata.PPRSummary
+	click text:Testdata.PatientC,searchrectangle:ImageRectangle("MIL/PowerChart/Label_Menu")+[-10,-90,100,-80]
+	PPRSummary.ClickTab Testdata.PPRSummary
+	
+	CaptureScreen {Name: "Step 31"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Recent button and Select Patient A>>
+	
+	set the SearchRectangle to []
+	click image:"PCF/PowerChartApp/Icon_Recent"
+	waitfor Testdata.ShortWait, text:Testdata.PatientA
+	click text:Testdata.PatientA, SearchRectangle:imagerectangle("Millennium/PatientSearch/Icon_Search")+[-150,0,0,150]
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 32"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient C chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientC
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 33"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Previous Patient chart button>>
+	
+	click image:"PCF/PowerChartApp/Icon_Previous_Chart"
+	assert readtext(ImageRectangle("MIL/PowerChart/Label_Menu")+[-10,-90,200,-80]) contains Testdata.PatientB with error "Provider Name"
+	WaitFor Testdata.ShortWait, Text:"Lifetime Relationships" 
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains "Visit Relationships" with Error "PPRSummary assertion failed"
+	
+	CaptureScreen {Name: "Step 34"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Patient Information > Visit List sub tab>>
+	
+	PPRSummary.ClickTab Testdata.VisitList
+	typetext altKey, tabKey
+	PPRSummary.ClickTab Testdata.VisitList
+	typetext altKey, tabKey
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN2 with Error "FIN assertion failed"
+	
+	CaptureScreen {Name: "Step 35"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to Organizer > Patient List view # Right Click on Patient C in custom patient list and select Open Chart option > Patient Information>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.ShortWait, image:"PatientList/Lable_PatientList"
+	"PatientList".RightClickAndSelectAnyOptionInPatientList Testdata.PatientC, "Open Patient Chart,Patient Information"
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 36"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient D chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientD
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 37"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<<  Navigate to Organizer > Patient List view. #Select Patient A in custom patient list #From Chart Menu, Select Patient Information option>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.ShortWait, image:"PatientList/Lable_PatientList"
+	click text:Testdata.PatientA, caseSensitive:true
+	Run "MIL/MenuSearch".SelectMenuSubMenu "Chart","Patient Information"
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 38"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient B chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientB
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 39"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to Organizer > Patient List view. #Select Patient D in custom patient list #From Patient of Interest Menu option, Select Patient Information option>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.ShortWait, image:"PatientList/Lable_PatientList"
+	click text:Testdata.PatientD, caseSensitive:true
+	click image:"PCF/PowerChartApp/Icon_Recent",HotSpot: [-22,8]
+	click text:"Patient Information",searchrectangle:ImageRectangle("Millennium/PatientSearch/Icon_Search")+[-270,0,50,1000]
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 40"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient C chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientC
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 41"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to Organizer #Click on Patient Menu > Search option #Search/load Patient B chart.>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	Run "MIL/MenuSearch".SelectMenuSubMenu "Patient","Search"
+	"MIL/PatientSearch".selectByFIN Testdata.FIN2
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	
+	CaptureScreen {Name: "Step 42"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient A chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientA
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 43"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Allergies tab>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu "Chart","Allergies"
+	WaitForAll Testdata.ShortWait,"PatientChart/Icon_ChevronBack_OCS", "PatientChart/Icon_Home_OCS"
+	
+	CaptureScreen {Name: "Step 44"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Flowsheet tab>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu "Chart","Flowsheet"
+	WaitForAll Testdata.ShortWait,"PatientChart/Icon_ChevronBack_OCS","PatientChart/Icon_ChevronFwd_Disable_OCS",  "PatientChart/Icon_Home_OCS"
+	
+	CaptureScreen {Name: "Step 45"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Back button (TOC)>>
+	
+	click "PatientChart/Icon_ChevronBack_OCS"
+	WaitFor Testdata.ShortWait,"PatientChart/Icon_ChevronForward_OCS"
+	
+	CaptureScreen {Name: "Step 46"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Recent Views dropdown>>
+	
+	click image:"PatientChart/Icon_Home_OCS",HotSpot: [-22,8]
+	Assert that ReadText(ImageRectangle("PatientChart/Icon_ChevronBack_OCS")+[40,0,150,100], IgnoreNewlines:On) contains ["Visit List", "Allergies", "Flowsheet"] with Error "dropdown list assertion"
+	
+	CaptureScreen {Name: "Step 47"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Next button (Toc)>>
+	
+	click "PatientChart/Icon_ChevronForward_OCS"
+	WaitForAll Testdata.ShortWait,"PatientChart/Icon_ChevronBack_OCS","PatientChart/Icon_ChevronFwd_Disable_OCS",  "PatientChart/Icon_Home_OCS"
+	
+	CaptureScreen {Name: "Step 48"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Home button>>
+	
+	click "PatientChart/Icon_Home_OCS"
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.FIN2 with Error "FIN assertion failed"
+	
+	CaptureScreen {Name: "Step 49"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to Organizer window > Patient List view # Right click on Patient F-Encounter A's chart> Click on open patient chart > PowerOrder >>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.ShortWait, image:"PatientList/Lable_PatientList"
+	CaptureScreen {Name: "Step 50"}
+	"PatientList".RightClickAndSelectAnyOptionInPatientList Testdata.PatientF, "Open Patient Chart,Orders"
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 51"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+2)
+	Log <<Step>>&&stepNum&<< Select Patient D chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientD
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	if ImageFound(text:"Assign a Relationship")
+		click text:"Attending Physician", SearchRectangle:ImageRectangle(text:"Assign a Relationship")+[-20,-10,180,250]
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 52"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on refresh button>>
+	
+	waitforall  Testdata.ShortWait, {image:"Common/Icon_Refresh"}, {image:"PatientChart/Label_PatientChartTOCMenu"}
+	click image:"Common/Icon_Refresh"
+	
+	CaptureScreen {Name: "Step 53"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to Organizer view > Right click on Patient E-Encounter D's chart > And click open Patient chart > Select PowerOrders from drop down display>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.ShortWait, image:"PatientList/Lable_PatientList"
+	"PatientList".RightClickAndSelectAnyOptionInPatientList Testdata.PatientE, "Open Patient Chart,Orders"
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 54"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient B chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientB
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	if ImageFound(text:"Assign a Relationship")
+		click text:"Attending Physician", SearchRectangle:ImageRectangle(text:"Assign a Relationship")+[-20,-10,180,250]
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 55"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to Organizer window and right click on Patient B chart and click on open Patient chart > Select Flowsheet from drop down display>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.ShortWait, image:"PatientList/Lable_PatientList"
+	CaptureScreen {Name: "Step 56"}
+	"PatientList".RightClickAndSelectAnyOptionInPatientList Testdata.PatientB, "Open Patient Chart,Flowsheet"
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 57"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+2)
+	Log <<Step>>&&stepNum&<< Select Patient E chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientE
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 58"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on refresh button>>
+	
+	waitfor  Testdata.ShortWait, {image:"Common/Icon_Refresh"}, {image:"PatientChart/Label_PatientChartTOCMenu"}
+	click image:"Common/Icon_Refresh"
+	
+	CaptureScreen {Name: "Step 59"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to Organizer view > Right click on Patient E-Encounter D's chart > And click open Patient chart > Select Flowsheet from drop down display>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.PatientList
+	waitfor Testdata.ShortWait, image:"PatientList/Lable_PatientList"
+	"PatientList".RightClickAndSelectAnyOptionInPatientList Testdata.PatientE, "Open Patient Chart,Flowsheet"
+	waitfor Testdata.ShortWait, text:"Close Chart",caseSensitive:true
+	
+	CaptureScreen {Name: "Step 60"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select Patient B chart and click on OK button>>
+	
+	set the SearchRectangle to ImageRectangle(text:"Close Chart")+[-20,-10,180,250]
+	click text:Testdata.PatientB
+	click text:"OK",caseSensitive:true
+	set the SearchRectangle to []
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	
+	CaptureScreen {Name: "Step 61"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Patient chart and powerchart application>>
+	
+	set the SearchRectangle to []
+	waitforAll Testdata.ShortWait, "Powerchart Organizer/Icon_Recent", "Common/Icon_Refresh" 
+	//TypeText altkey, f4
+	Run "common".ClosePowerChart
+	TypeText returnkey
+	
+	CaptureScreen {Name: "Step 62"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+Catch theException
+	LogError "Unable to run the script Click Cancel."&&theException //Log an error in the test script
+	CaptureScreen ("Exception")
+End try

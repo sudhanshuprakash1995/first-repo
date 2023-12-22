@@ -1,0 +1,575 @@
+﻿(*************************************************
+Script Name: PCF-VR-Demographic_Banner-Updating_Birth_Sex_and_Administrative_Sex_within_Gender_Identity_modal_window
+Author: SP094303
+Date of creation: 14/03/2023
+*****************************
+
+RQM: https://jazz.cerner.com:9443/qm/web/console/IP?oslc_config.context=_BJd_saWyEemip7ev9JVohg#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=93637
+
+*************************************************)
+--------------------------------------------------------------------------------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////PARAMETERS/////////////////////////////////////////////////////////////////////
+
+Params Domain
+Set Testdata to "UTIL/JSON".initializeResourceData(JSONValue(file ResourcePath("PCF-VR-Demographic_Banner-Updating_Birth_Sex_and_Administrative_Sex_within_Gender_Identity_modal_window.json")),Domain)
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+///////////////////////////////////////////////////////////////PREREQUISITES///////////////////////////////////////////////////////////////
+
+//Loading patient1 with MRN value
+Common.LaunchMillenniumWindow Testdata.Application1
+Run "MIL/Millennium".login Testdata.User3,Testdata.Password,Domain
+"MIL/PatientSearch".selectByFIN Testdata.FIN1  
+doubleclick text:"ERM Add Modify Encounter", caseSensitive:yes
+waitfor 30, text:"Demographics Information",caseSensitive:yes
+
+click text:"Demographics Information",caseSensitive:yes
+waitfor 30, text:"Employment Info", caseSensitive:yes
+
+If ImageFound(text:"unknown",SearchRectangle:ImageRectangle(text:"Birth Sex")+[0,0,150,150]) or ImageFound(text:"Male",caseSensitive:yes,SearchRectangle:ImageRectangle(text:"Birth Sex")+[0,0,150,150]) or ImageFound(text:"Female",caseSensitive:yes,SearchRectangle:ImageRectangle(text:"Birth Sex")+[0,0,150,150]) then
+	RightClick ImageLocation(text:"Birth Sex:")+[0,20]
+	click text:"Delete",SearchRectangle:ImageRectangle(text:"Birth Sex")+[-250,0,0,250]
+End if
+
+click text:"OK",caseSensitive:yes
+Click text:"Yes",caseSensitive:yes, SearchRectangle:ImageRectangle(text:"PMHNAreg")+[0,0,400,200]
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//Loading patient2 with MRN value
+"MIL/PatientSearch".selectByFIN Testdata.FIN2
+doubleclick text:"ERM Add Modify Encounter", caseSensitive:yes
+waitfor 30, text:"Demographics Information",caseSensitive:yes
+click text:"Demographics Information",caseSensitive:yes
+
+if ImageFound(text:"Undifferentiated",SearchRectangle:ImageRectangle(text:"Birth Information")+[0,0,150,150]) or ImageFound(text:"unspecified",SearchRectangle:ImageRectangle(text:"Birth Information")+[0,0,150,150]) or ImageFound(text:"Female",caseSensitive:yes,SearchRectangle:ImageRectangle(text:"Birth Information")+[0,0,150,150]) then
+	typetext  tabkey
+	typetext "male"
+end if
+
+If ImageFound(text:"unknown",SearchRectangle:ImageRectangle(text:"Birth Sex")+[0,0,150,150]) or ImageFound(text:"Male",caseSensitive:yes,SearchRectangle:ImageRectangle(text:"Birth Sex")+[0,0,150,150]) then
+	RightClick ImageLocation(text:"Birth Sex:")+[0,20]
+	click text:"Delete",SearchRectangle:ImageRectangle(text:"Birth Sex")+[-250,0,0,250]
+	typetext "female"
+End if
+
+click text:"OK",caseSensitive:yes
+Click text:"Yes",caseSensitive:yes, SearchRectangle:ImageRectangle(text:"PMHNAreg")+[0,0,400,200]
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------
+
+//Loading patient3 with MRN value
+"MIL/PatientSearch".selectByFIN Testdata.FIN3
+doubleclick text:"ERM Add Modify Encounter", caseSensitive:yes
+waitfor 30, text:"Demographics Information",caseSensitive:yes
+click text:"Demographics Information",caseSensitive:yes
+
+if ImageFound(text:"Undifferentiated",SearchRectangle:ImageRectangle(text:"Birth Information")+[0,0,150,150]) or ImageFound(text:"Male",caseSensitive:yes,SearchRectangle:ImageRectangle(text:"Birth Information")+[0,0,150,150]) or ImageFound(text:"Female",caseSensitive:yes,SearchRectangle:ImageRectangle(text:"Birth Information")+[0,0,150,150]) then
+	typetext  tabkey
+	typetext "unspecified"
+end if
+
+click text:"OK",caseSensitive:yes
+Click text:"No",caseSensitive:yes, SearchRectangle:ImageRectangle(text:"PMHNAreg")+[0,0,400,200]
+
+///////////////////////////////////////////////////////////////DESIGN STEPS///////////////////////////////////////////////////////////////
+
+Try
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Launch Powerchart.exe as User 1.>>
+	
+	Common.LaunchMillenniumWindow Testdata.Application2
+	Run "MIL/Millennium".login Testdata.User1,Testdata.Password,Domain
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	Run "DSK/Utilities".maximizeWindow	
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Open Patient 1's chart.>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext returnKey
+	"MIL/PatientSearch".selectByFIN Testdata.FIN1
+	if ImageFound(text:"Assign a Relationship")
+		click {text:"Attending Physician"}
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	assert that not ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	
+	CaptureScreen {Name: "Step 02"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Female", "SingleClick"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,300]) contains ["Administrative Sex","Female","Birth Sex","Select Birth Sex"] with error "fields assertion"
+	waitfor 30, text:"Sex:",casesensitive:yes
+	click image:"PCF/PowerChartApp/Icon_Recent"
+	CaptureScreen {Name: "Step 03"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Change the Birth Sex to Female.>>
+	
+	click text:"Select Birth Sex", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,300]
+	click text:"female", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]) contains "female" with error "Birth Sex field assertion"
+	
+	CaptureScreen {Name: "Step 04"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Save button in the Sex and Gender Identity Information dialog.>>
+	
+	click text:"Save",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]
+	assert that not ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 05"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Female", "SingleClick"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","female"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 06"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Change the Birth Sex to Male.>>
+	
+	click text:"female", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]
+	click text:"Male", caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]) contains "male" with error "Birth Sex field assertion"
+	
+	CaptureScreen {Name: "Step 07"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Save button in the Sex and Gender Identity Information dialog.>>
+	
+	click text:"Save",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 08"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Female", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","female"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","male"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 09"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Change the Birth Sex to Unknown.>>
+	
+	click text:"Male",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,300]
+	click text:"unknown", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]) contains "unknown" with error "Birth Sex field assertion"
+	
+	CaptureScreen {Name: "Step 10"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Save button in the Sex and Gender Identity Information dialog.>>
+	
+	click text:"Save",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 11"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field or information icon next to Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Female", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","female"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","unknown"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 12"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Sex and Gender Identity Information dialog.>>
+	
+	TypeText altkey, f4
+	
+	CaptureScreen {Name: "Step 13"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Open Patient 2's chart.>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext returnKey
+	"MIL/PatientSearch".selectByFIN Testdata.FIN2
+	if ImageFound(text:"Assign a Relationship")
+		click {text:"Attending Physician"}
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 14"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Male", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","male"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","female","Male-to-Female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 15"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Change the Birth sex to Male>>
+	
+	click text:"female", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,200]
+	click text:"Male",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,150,300]
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,300]) contains "Male" with error "Birth Sex field assertion"
+	
+	CaptureScreen {Name: "Step 16"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Save Button in Sex and Gender Identity Information dialog.>>
+	
+	click text:"Save",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,320]
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 17"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Male", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","male"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","male","Male-to-Female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 18"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Change the Administrative Sex to Unknown\Unspecified.>>
+	
+	click text:"Male", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]
+	click text:"Unspecified", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,220]
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]) contains "unspecified" with error "Birth Sex field assertion"
+	
+	CaptureScreen {Name: "Step 19"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Save Button Sex and Gender Identity Information dialog.>>
+	
+	click text:"Save",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,320]
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 20"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Unspecified", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","unspecified"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","male","Male-to-Female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 21"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Change the Administrative Sex to Interminent.>>
+	
+	click text:"Unspecified", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]
+	click text:"Undifferentiated", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,220]
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]) contains "Undifferentiated" with error "Birth Sex field assertion"
+	
+	CaptureScreen {Name: "Step 22"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Save Button Sex and Gender Identity Information dialog.>>
+	
+	click text:"Save",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,320]
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 23"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Undifferentiated", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","Undifferentiated"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","male","Male-to-Female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 24"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Sex and Gender Identity Information dialog.>>
+	
+	TypeText altkey, f4
+	
+	CaptureScreen {Name: "Step 25"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Open Patient 3's chart.>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext returnKey
+	"MIL/PatientSearch".selectByFIN Testdata.FIN3
+	if ImageFound(text:"Assign a Relationship")
+		click {text:"Attending Physician"}
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 26"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Unspecified", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","Unspecified"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","unknown","Identifies as Female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 27"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Modify Administrative Sex to Male.>>
+	
+	click text:"Unspecified", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]
+	click text:"Male",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,220]
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]) contains "Male" with error "Birth Sex field assertion"
+	
+	CaptureScreen {Name: "Step 28"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Save Button Sex and Gender Identity Information dialog.>>
+	
+	click text:"Save",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,320]
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 29"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Male", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","male"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","unknown","Identifies as Female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 30"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Modify Administrative Sex to Female.>>
+	
+	click text:"Male", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]
+	click text:"Female",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,220]
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]) contains "Female" with error "Birth Sex field assertion"
+	
+	CaptureScreen {Name: "Step 31"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Save Button Sex and Gender Identity Information dialog.>>
+	
+	click text:"Save",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,320]
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 32"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Female", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","Female"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","unknown","Identifies as Female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 33"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Modify Administrative Sex to Intermitant/Undifferentiated.>>
+	
+	click text:"Female", SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]
+	click text:"Undifferentiated",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,220]
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,100,300,150]) contains "Undifferentiated" with error "Birth Sex field assertion"
+	
+	CaptureScreen {Name: "Step 34"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Save Button Sex and Gender Identity Information dialog.>>
+	
+	click text:"Save",caseSensitive:yes, SearchRectangle:ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,150,300,320]
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	
+	CaptureScreen {Name: "Step 35"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Undifferentiated", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","Undifferentiated"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","unknown","Identifies as Female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 36"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Sex and Gender Identity Information dialog.>>
+	
+	typetext altkey, f4
+	
+	CaptureScreen {Name: "Step 37"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Change User and Login with User 2.>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.Task,Testdata.Change
+	Common.LoginChangeUser   Testdata.User2,Testdata.Password
+	if ImageFound(text:"Assign a Relationship")
+		click {text:"Attending Physician"}
+		waitfor Testdata.ShortWait, "ReminderTasks/Button_ok"
+		click "ReminderTasks/Button_ok"
+	end if
+	waitfor Testdata.ShortWait, image:"MIL/PowerChart/Label_Menu"
+	Assert that ReadText(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]) contains Testdata.Patient3 with Error "FIN assertion failed"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	(*assert that ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-20,0,300,100] contains "PCF/PowerChartApp/Icon_Sex_Information" with error "sex information icon not present"*)
+	
+	CaptureScreen {Name: "Step 38"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on Sex field in the demobanner.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Undifferentiated", "SingleClick"
+	assert that ImageFound("PCF/PowerChartApp/Icon_Sex_Information") with error "sex information icon not present"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,0,300,140]) contains ["Administrative Sex","Undifferentiated"] with error "Administrative sex field assertion"
+	assert that ReadText(ImageRectangle(text:Testdata.GenderIdentityInfoTxt)+[-10,120,300,300]) contains ["Birth Sex","unknown","Identifies as Female"] with error "Birth sex field assertion"
+	
+	CaptureScreen {Name: "Step 39"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Sex and Gender identity information dialog. Right click on demobanner and remove the DLL for Sex field and click ok.>>
+	
+	typetext altkey, f4
+	Assert that number of items in EveryImageRectangle("MIL/PowerChart/Logo_Powerchart_Header") equals 1 with error ""
+	rightclick text:"Sex:Undifferentiated",caseSensitive:yes,waitfor:30
+	set the searchrectangle to item 2 of EveryImageRectangle("MIL/PowerChart/Logo_Powerchart_Header")+[0,160,1800,1000]
+	put ImageLocation( text:"PVDemograph",SearchRectangle:ImageRectangle(text:"Sex")+[0,-10,500,50]) into location
+	doubleclick location
+	wait 2         //Adding wait so that dll name can be deleted properly
+	doubleclick location
+	typetext deleteKey
+	typetext returnKey
+	set the searchrectangle to []
+	click text:"OK",caseSensitive:yes
+	"DemoBanner".ActionOnDemoBannnerField "Sex:Undifferentiated", "SingleClick"
+	Assert that number of items in  EveryImageRectangle("MIL/PowerChart/Logo_Powerchart_Header") equals 1 with error ""
+	
+	CaptureScreen {Name: "Step 40"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close patient 3's chart and powerchart.>>
+	
+	//set the SearchRectangle to []
+	rightclick text:"Sex:Undifferentiated",caseSensitive:yes,waitfor:Testdata.ShortWait
+	set the searchrectangle to item 2 of EveryImageRectangle("MIL/PowerChart/Logo_Powerchart_Header")+[0,160,1800,1000]
+	//Reverting the dll edit changes so that it can be executed for next run without any manual intervention 
+	doubleclick location
+	wait 2         //Adding wait so that dll name can be entered properly
+	typetext Testdata.PvdemoDll,returnKey
+	set the searchrectangle to []
+	click text:"OK", caseSensitive:yes, waitfor:Testdata.ShortWait
+	waitforAll Testdata.ShortWait, "Powerchart Organizer/Icon_Recent", "Common/Icon_Refresh" 
+	Run "common".ClosePowerChart
+	TypeText returnkey
+	
+	CaptureScreen {Name: "Step 41"}
+	
+	Catch theException
+	LogError "Unable to run the script Click Cancel."&&theException //Log an error in the test script
+	CaptureScreen ("Exception")
+End try

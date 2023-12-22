@@ -1,0 +1,222 @@
+﻿(*************************************************
+Script Name: PCF-VR-Demographic_banner_open_mpage_from_demographic_banner_field
+Author: SP094303
+Date of creation: 30/09/2022
+*****************************
+
+RQM: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestCase&id=152423
+
+*************************************************)
+--------------------------------------------------------------------------------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////PARAMETERS/////////////////////////////////////////////////////////////////////
+
+Params Domain
+
+If Domain is empty
+	Set Domain to "MSOLV"
+End If
+
+Set Testdata to "UTIL/JSON".initializeResourceData(JSONValue(file ResourcePath("PCF-VR-Demographic_banner_open_mpage_from_demographic_banner_field.json")),Domain)
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+Try
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Launch PowerChart with user1 specified in precondition.>>
+	
+	Common.LaunchMillenniumWindow Testdata.Application
+	Run "MIL/Millennium".login Testdata.User1,Testdata.Password,Domain
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	Run "DSK/Utilities".maximizeWindow
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Search and open prerequisite Patient 1's chart. From the demobanner click Patient Name Url link.>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext returnKey
+	"MIL/PatientSearch".selectByFIN Testdata.FIN1
+	"MIL/Millennium".assignRelationship TestData.AttendingPhy
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	"DemoBanner".ActionOnDemoBannnerField Testdata.Patient, "SingleClick"
+	waitfor Testdata.ShortWait, text:Testdata.TocLinkedComponent1,caseSensitive:yes
+	Assert that  number of items in EveryImageLocation("MIL/PowerChart/Logo_Powerchart_Header") equals 2 with error "error"
+	
+	CaptureScreen{Name: "Step 02"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Patient Chart and PowerChart application.>>
+	
+	TypeText altKey, f4
+	PatientChart.ClosePatientChartWithName Testdata.Patient
+	click "Powerchart Organizer/Icon_Exit"
+	"common".ClosePowerChart
+	typetext returnKey
+	
+	CaptureScreen{Name: "Step 03"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Launch PowerChart with user2 specified in precondition.>>
+	
+	Common.LaunchMillenniumWindow Testdata.Application
+	Run "MIL/Millennium".login Testdata.User2,Testdata.Password,Domain
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	
+	CaptureScreen{Name: "Step 04"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Search and open prerequisite Patient 1's chart. From the demobanner click Patient Name Url link.>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext Testdata.Patient, returnKey
+	"MIL/Millennium".assignRelationship TestData.AttendingPhy
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	"DemoBanner".ActionOnDemoBannnerField Testdata.Patient, "SingleClick"
+	waitfor Testdata.ShortWait, text:Testdata.TocLinkedComponent1,caseSensitive:yes
+	//waitfor Testdata.ShortWait, "General_Framework/General_Framework_Common_Utilities/Text_Openedby_Focus"
+	Assert that  number of items in EveryImageLocation("MIL/PowerChart/Logo_Powerchart_Header") equals 2 with error "error"
+	
+	CaptureScreen{Name: "Step 05"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Patient Chart and PowerChart application.>>
+	
+	TypeText altKey, f4
+	PatientChart.ClosePatientChartWithName Testdata.Patient
+	click "Powerchart Organizer/Icon_Exit"
+	"common".ClosePowerChart
+	typetext returnKey
+	
+	CaptureScreen{Name: "Step 06"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Launch PowerChart with user3 specified in precondition.>>
+	
+	Common.LaunchMillenniumWindow Testdata.Application
+	Run "MIL/Millennium".login Testdata.User3,Testdata.Password,Domain
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	
+	CaptureScreen{Name: "Step 07"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Search and open prerequisite Patient 1's chart. From the demobanner click Patient Name Url link.>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext Testdata.Patient, returnKey
+	"MIL/Millennium".assignRelationship TestData.AttendingPhy
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	"DemoBanner".ActionOnDemoBannnerField Testdata.Patient, "SingleClick"
+	waitfor Testdata.ShortWait, text:Testdata.TocLinkedComponent3,caseSensitive:yes
+	Assert that  number of items in EveryImageLocation("MIL/PowerChart/Logo_Powerchart_Header") equals 2 with error "error"
+	
+	CaptureScreen{Name: "Step 08"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Patient Chart and PowerChart application.>>
+	
+	TypeText altKey, f4
+	PatientChart.ClosePatientChartWithName Testdata.Patient
+	click "Powerchart Organizer/Icon_Exit"
+	"common".ClosePowerChart
+	typetext returnKey
+	
+	CaptureScreen{Name: "Step 09"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Launch PowerChart with user4 specified in precondition.>>
+	
+	Common.LaunchMillenniumWindow Testdata.Application
+	Run "MIL/Millennium".login Testdata.User4,Testdata.Password,Domain
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	
+	CaptureScreen{Name: "Step 10"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Search and open prerequisite Patient 1's chart. From the demobanner click Patient Name Url link.>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext Testdata.Patient, returnKey
+	"MIL/Millennium".assignRelationship TestData.AttendingPhy
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	"DemoBanner".ActionOnDemoBannnerField Testdata.CPIS, "SingleClick"
+	waitfor Testdata.ShortWait, text:Testdata.TocLinkedComponent3,caseSensitive:yes
+	Assert that  number of items in EveryImageLocation("MIL/PowerChart/Logo_Powerchart_Header") equals 2 with error "error"
+	
+	CaptureScreen{Name: "Step 11"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Patient Chart and PowerChart application.>>
+	
+	TypeText altKey, f4
+	PatientChart.ClosePatientChartWithName Testdata.Patient
+	click "Powerchart Organizer/Icon_Exit"
+	"common".ClosePowerChart
+	typetext returnKey
+	
+	CaptureScreen{Name: "Step 12"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Launch PowerChart with user5 specified in precondition.>>
+	
+	Common.LaunchMillenniumWindow Testdata.Application
+	Run "MIL/Millennium".login Testdata.User5,Testdata.Password,Domain
+	waitfor Testdata.MediumWait, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	
+	CaptureScreen{Name: "Step 13"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Search and open prerequisite Patient 1's chart. From the demobanner click Patient Name Url link.>>
+	
+	click Image:"Millennium/PatientSearch/Icon_Search"
+	typetext Testdata.Patient, returnKey
+	"MIL/Millennium".assignRelationship TestData.AttendingPhy
+	waitfor Testdata.ShortWait, image:"PatientChart/Label_PatientChartTOCMenu"
+	"DemoBanner".ActionOnDemoBannnerField Testdata.CPIS, "SingleClick"
+	waitfor Testdata.ShortWait, "PCF/PowerChartApp/Icon_Error"
+	waitforall Testdata.ShortWait, {text:"Failed to execute report"}, {text:"dummy"}
+	
+	CaptureScreen{Name: "Step 14"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close Patient Chart and PowerChart application.>>
+	
+	TypeText altKey, f4
+	PatientChart.ClosePatientChartWithName Testdata.Patient
+	click "Powerchart Organizer/Icon_Exit"
+	"common".ClosePowerChart
+	typetext returnKey
+	
+	CaptureScreen{Name: "Step 15"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+Catch theException
+	LogError "Unable to run the script Click Cancel."&&theException //Log an error in the test script
+	CaptureScreen ("Exception")
+End try

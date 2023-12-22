@@ -1,0 +1,255 @@
+﻿(*************************************************
+Script Name: PCF-VR-Ambulatory organizer encounter context to open patient chart
+Author: SP094303
+Date of creation: 
+*****************************
+
+RQM: https://jazz.cerner.com:9443/qm/web/console/IP#action=com.ibm.rqm.planning.home.actionDispatcher&subAction=viewTestScript&id=138531
+
+*************************************************)
+--------------------------------------------------------------------------------------------------------------------------------------------------
+/////////////////////////////////////////////////////////////////////PARAMETERS/////////////////////////////////////////////////////////////////////
+Params Domain
+Set Testdata to "UTIL/JSON".initializeResourceData(JSONValue(file ResourcePath("PCF-VR-Ambulatory organizer encounter context to open patient chart.json")),Domain)
+
+--------------------------------------------------------------------------------------------------------------------------------------------------
+
+Try
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Launch PowerChart with user1 specified in precondition.>>
+	
+	Common.LaunchMillenniumWindow Testdata.Application
+	Run "MIL/Millennium".login Testdata.Username,Testdata.Password,Testdata.Domain
+	waitfor 120, "General_Framework/General_Framework_Common_Utilities/Label_Organizerfor"
+	Run "DSK/Utilities".maximizeWindow
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Navigate to the ambulatory organizer tab.>>
+	
+	Run "MIL/MenuSearch".SelectMenuSubMenu Testdata.View,Testdata.AmbulatoryOrg
+	Assert that imageFound(waitfor:10,image:"AO/Common/Text_AmbulatoryOrganizer") is true with Error "Provider Name"
+	Log <<Expected Result: Verifying if the Ambulatory Organizer is selected>>
+	waitforAll 20, {text:Testdata.Resource}, {text:Testdata.Patient, Searchrectangle:ImageRectangle("AO/Common/Text_AmbulatoryOrganizer")+[0,0,1760,348]}
+
+	CaptureScreen{Name: "Step 2"}
+	
+	-----------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on the checkmark or clock icon of the appointment.>>
+	
+	if(imageFound(15,image:"checkMark" ))  then
+		log <<Navigation Successful to Ambulatory Organizer>>
+		click image:"checkMark"
+	else if(imageFound(15,image:"AO/List/PreVisit/Icon_PreVisitClock"))	
+		log <<Navigation Successful to Ambulatory Organizer>>
+		click image:"AO/List/PreVisit/Icon_PreVisitClock"
+	end if
+	waitfor 20, image:"AO/Verify/Text_PreVisitInformation"	
+	
+	CaptureScreen {Name: "Step 3"}
+	
+	---------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Hover over component title (e.g: pre-visit information).>>
+	MoveTo image:"AO/Verify/Text_PreVisitInformation"
+	
+	CaptureScreen {Name: "Step 4"}
+	MoveTo [0,0]
+	
+	----------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on title pre-visit information.>>
+	
+	click image:"AO/Verify/Text_PreVisitInformation"
+	waitfor 30, image:"PatientChart/Label_PatientChartTOCMenu"
+	Assert that readtext(ImageRectangle("MIL/PowerChart/Logo_Powerchart_Header") +[0,0,200,200],DPI:100) contains Testdata.Patient with Error "Provider Name"
+
+	CaptureScreen {Name: "Step 5"}
+	
+	----------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< From patient1 chart switch to organizer window and click on calendar icon in Ambulatory organizer.>>
+	typetext altKey, tabKey 	
+	waitfor 10, image:"PCF/PowerChartApp/Icon_AmbulatoryOrgCalendar"
+	click  image:"PCF/PowerChartApp/Icon_AmbulatoryOrgCalendar"
+	MoveTo [0,0]
+	Assert that  trimAll(ReadText(ImageRectangle("PCF/PowerChartApp/Icon_AmbulatoryOrgCalendar")+[-200,0,200,300],DPI:200)) contains Testdata.WeekDay with error "Provider name"
+	
+	CaptureScreen {Name: "Step 6"} 
+
+	----------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Switch back to the patient1 chart.>>
+	
+	typetext altKey, tabKey 
+	WaitForAll 100, "PatientChart/Label_PatientChartTOCMenu", "Common/Icon_PatientSearch"
+	Assert that  "DemoBanner".ValidateDemoBannnerContent(Testdata.FIN1) equals true with error "Provider Name"
+	waitfor 15, {image:"Common/Icon_Refresh",Searchrectangle:[]}
+	PPRSummary.ClickTab Testdata.VisitList	
+	assert that ImageFound(text:"X",SearchRectangle:(ImageRectangle(text:Testdata.FIN1,searchrectangle:(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]))+[-10,-10,900,10])) equals true with error "Provider Name"
+	
+	CaptureScreen {Name: "Step 7"}
+	
+	-----------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Right click on encounter B option. Select Change Encounter option.>>
+	
+	waitfor 100, text:Testdata.FIN2, DPI:200, Searchrectangle:ImageRectangle("MIL/PowerChart/Label_Menu")+[200,70,1820,650]
+	RightClick text:Testdata.FIN2, DPI:200, Searchrectangle:ImageRectangle("MIL/PowerChart/Label_Menu")+[200,70,1820,650]
+	click text:Testdata.ChangeEncounter,caseSensitive:yes
+	waitfor 10, {text:Testdata.ChangeEncounterStatement,textDifference:6, Searchrectangle:ImageRectangle("MIL/PowerChart/Label_Menu")+[400,70,1820,650]}
+
+	CaptureScreen {Name: "Step 8"}
+
+	-----------------------------------------------------------------------------------------------------------------------------------------	
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Select 'Yes' option displayed within the "Visit List" dialog.>>
+	
+	waitfor 10, text:Testdata.Yes, caseSensitive:yes
+	click text:Testdata.Yes, caseSensitive:yes
+	Assert that  "DemoBanner".ValidateDemoBannnerContent(Testdata.FIN2) equals true with error "Provider Name"
+	log <<FIN number is displaying correctly>>
+	assert that ImageFound(text:"X",SearchRectangle:(ImageRectangle(text:Testdata.FIN2,searchrectangle:(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]))+[-10,-10,900,10])) equals true with error "error"
+
+	CaptureScreen {Name: "Step 9"}
+
+	-----------------------------------------------------------------------------------------------------------------------------------------	
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close the patient1 Chart.>>
+	
+	waitfor 15, "Powerchart Organizer/Icon_Recent"
+	PatientChart.ClosePatientChartWithName Testdata.Patient
+	
+	CaptureScreen {Name: "Step 10"}
+
+	-----------------------------------------------------------------------------------------------------------------------------------------	
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on the checkmark or clock icon of the appointment.>>
+	
+	waitfor 30, image:"AO/Common/Text_AmbulatoryOrganizer"
+	if(imageFound(15,image:"checkMark"  ))  then
+		log "Navigation Successful to Ambulatory Organizer"
+		click image:"checkMark" 
+	else if(imageFound(15,image:"AO/List/PreVisit/Icon_PreVisitClock"))	
+		log "Navigation Successful to Ambulatory Organizer"
+		click image:"AO/List/PreVisit/Icon_PreVisitClock"
+	end if
+	waitfor 20, {image:"AO/Verify/Text_PreVisitInformation",SearchRectangle:ImageRectangle("AO/Common/Text_AmbulatoryOrganizer")+[0,0,1760,348]}
+
+	CaptureScreen {Name: "Step 11a"}
+
+	---------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Log <<Step>>&&stepNum&<< Hover over component title (e.g: pre-visit information)>>
+	
+	waitfor 15, image:"AO/Verify/Text_PreVisitInformation"
+	MoveTo image:"AO/Verify/Text_PreVisitInformation"
+	
+	CaptureScreen {Name: "Step 11b"}
+	MoveTo [0,0]
+
+	----------------------------------------------------------------------------------------------------------------------------------------------
+	
+	
+	Log <<Step>>&&stepNum&<< Click on title pre-visit information.>>
+	
+	click image:"AO/Verify/Text_PreVisitInformation"
+	Set the SearchRectangle to []
+	waitfor 20, image:"PatientChart/Label_PatientChartTOCMenu"
+	Assert that readtext(ImageRectangle("MIL/PowerChart/Logo_Powerchart_Header") +[0,0,200,200],DPI:100) contains Testdata.Patient with Error "Provider Name"
+
+	CaptureScreen {Name: "Step 11c"}
+
+	----------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Log <<Step>>&&stepNum&<< From patient1 chart switch to organizer window and click on calendar icon in Ambulatory organizer.>>
+	
+	typetext altKey, tabKey 
+	waitfor 10, image:"PCF/PowerChartApp/Icon_AmbulatoryOrgCalendar"
+	click image:"PCF/PowerChartApp/Icon_AmbulatoryOrgCalendar"
+	MoveTo [0,0]
+	Assert that  trimAll(ReadText(ImageRectangle(image:"PCF/PowerChartApp/Icon_AmbulatoryOrgCalendar")+[-200,0,200,300],DPI:200)) contains Testdata.WeekDay with error "Provider name"
+
+	CaptureScreen {Name: "Step 11d"}
+
+	----------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Log <<Step>>&&stepNum&<< Switch back to the patient1 chart.>>
+	
+	typetext altKey, tabKey 
+	WaitForAll 100, "PatientChart/Label_PatientChartTOCMenu", "Common/Icon_PatientSearch"
+	Assert that  "DemoBanner".ValidateDemoBannnerContent(Testdata.FIN1) equals true with error "Provider Name"
+	log "FIN number is displaying correctly"
+	waitfor 15, "Common/Icon_Refresh"
+	PPRSummary.ClickTab Testdata.VisitList	
+	assert that ImageFound(text:"X",SearchRectangle:(ImageRectangle(text:Testdata.FIN1,searchrectangle:(ImageRectangle("MIL/PowerChart/Label_Menu")+[210,60,1820,780]))+[-10,-10,900,10])) equals true with error "Provider Name"
+
+	CaptureScreen {Name: "Step 11e"}
+
+	-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< From the demobanner click on Patient Name Url link.>>
+	
+	"DemoBanner".ActionOnDemoBannnerField Testdata."Patient", "SingleClick"
+	waitfor 30, text:Testdata.TocLinkedComponent,caseSensitive:yes
+	Assert that  number of items in EveryImageLocation("MIL/PowerChart/Logo_Powerchart_Header") equals 2 with error "error"
+	put item 2 of everyImageRectangle("MIL/PowerChart/Logo_Powerchart_Header") into rect
+	
+	CaptureScreen {Name: "Step 12"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Click on the hyperlink Mpage component which is linked to a TOC.>>
+	
+	set the searchrectangle to (rect+[-5,0,400,400])
+	click {text:Testdata.TocLinkedComponent,caseSensitive:yes,Searchrectangle:rect+[-5,0,400,400]} 
+	set the searchrectangle to []
+	Assert that  "DemoBanner".ValidateDemoBannnerContent(Testdata.FIN1) equals true with error "Provider Name"
+	waitfor 10, image:"PCF/PowerChartApp/Logo_Taskbar_PowerChart"
+	click image:"PCF/PowerChartApp/Logo_Taskbar_PowerChart"
+	Set the SearchRectangle to  ImageRectangle(image:"PCF/PowerChartApp/Logo_Taskbar_PowerChart")+[-305,-150,1500,-30]
+	Assert that  number of items in EveryImageLocation("MIL/PowerChart/Logo_Powerchart_Header") equals 3 with error "error"
+	Set the SearchRectangle to []
+	Click [0,0]
+	
+	CaptureScreen {Name: "Step 13"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Switch back to the Mpage window and close it.>>
+	
+	typetext altKey, tabKey
+	waitfor 15, "Common/Icon_Refresh"
+	typetext altKey, f4
+	
+	CaptureScreen {Name: "Step 14"}
+	
+	-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	
+	Set stepNum to format("%02i",stepNum+1)
+	Log <<Step>>&&stepNum&<< Close patient1 chart and powerchart.>> 
+	
+	set the SearchRectangle to []
+	waitforAll 15, "Powerchart Organizer/Icon_Recent", "Common/Icon_Refresh" 
+	Run "common".ClosePowerChart
+	
+Catch theException
+	LogError <<Unable to run the script Click Cancel.>>&&theException //Log an error in the test script
+	
+	CaptureScreen {Name: "Exception"}
+	
+End try
